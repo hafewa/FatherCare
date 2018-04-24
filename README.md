@@ -1,2 +1,3 @@
 # FatherCare
-为老婆设计的特效信息整合
+## 特效相关的网站
+1. [CGWell](http://bbs.cgwell.com/)
