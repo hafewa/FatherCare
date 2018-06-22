@@ -65,6 +65,7 @@ public class EffectPerformanceTool : MonoBehaviour
                 string fxPath = files[mReportList.Count].DirectoryName.Substring(files[mReportList.Count].DirectoryName.LastIndexOf("Assets"));
                 fxPath.Replace("\\", "/");
                 fxPath = fxPath + "/" + files[mReportList.Count].Name;
+                this.transform.name = string.Format("Analyzing...({0}/{1})", mReportList.Count, files.Length);
                 yield return StartCoroutine(AnalyzeSingleFx(fxPath));
             }
         }
