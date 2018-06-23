@@ -1,22 +1,24 @@
-Shader "FatherCare/Blend (UVScroll)"
+Shader "FatherCare/Additive AlphaBlend (UVScroll)" 
 {
 	Properties 
 	{
+		_TintColor ("Tint Color", Color) = (0.5,0.5,0.5,0.5)
 		_MainTex ("Particle Texture", 2D) = "white" {}
 		_InvFade ("Soft Particles Factor", Range(0.01,3.0)) = 1.0
 
-		_ScrollXSpeed ("X Scroll Speed",Float) = 2  
-		_ScrollYSpeed ("Y Scroll Speed", Float) = 2
+		_ScrollXSpeed ("X Scroll Speed",Float) = 0  
+		_ScrollYSpeed ("Y Scroll Speed", Float) = 0
+		[Enum(Additive, 1, AlphaBlend, 10)] _DstBlend ("Additive/AlphaBlend", Float) = 1
 	}
 
 	Category 
 	{
 		Tags { "Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent" "PreviewType"="Plane" }
-		Blend DstColor One
-		ColorMask RGB
+		Blend SrcAlpha [_DstBlend]
+		//ColorMask RGB
 		Cull Off Lighting Off ZWrite Off
 
-		SubShader
+		SubShader 
 		{
 			Pass 
 			{
@@ -26,15 +28,15 @@ Shader "FatherCare/Blend (UVScroll)"
 				#pragma target 2.0
 				#pragma multi_compile_particles
 				#pragma multi_compile_fog
-
+			
 				#include "UnityCG.cginc"
 
 				sampler2D _MainTex;
 				fixed4 _TintColor;
-			
+
 				fixed _ScrollXSpeed;  
 				fixed _ScrollYSpeed;
-
+			
 				struct appdata_t 
 				{
 					float4 vertex : POSITION;
@@ -82,15 +84,16 @@ Shader "FatherCare/Blend (UVScroll)"
 					float sceneZ = LinearEyeDepth (SAMPLE_DEPTH_TEXTURE_PROJ(_CameraDepthTexture, UNITY_PROJ_COORD(i.projPos)));
 					float partZ = i.projPos.z;
 					float fade = saturate (_InvFade * (sceneZ-partZ));
-					i.color *= fade;
+					i.color.a *= fade;
 					#endif
 				
-					fixed4 col = i.color * tex2D(_MainTex, TRANSFORM_TEX(i.texcoord, _MainTex) + frac(float2 (_ScrollXSpeed, _ScrollYSpeed) * _Time.y));
-					UNITY_APPLY_FOG_COLOR(i.fogCoord, col, fixed4(0,0,0,0)); // fog towards black due to our blend mode
-					return col;
+					fixed4 texColor = tex2D(_MainTex, i.texcoord + frac(float2 (_ScrollXSpeed, _ScrollYSpeed) * _Time.y));
+					fixed3 col = 2.0f * texColor.xyz * i.color.xyz * _TintColor.xyz;
+					UNITY_APPLY_FOG(i.fogCoord, col);
+					return fixed4(col, texColor.a * i.color.a);
 				}
 				ENDCG 
 			}
-		}
+		}	
 	}
 }
